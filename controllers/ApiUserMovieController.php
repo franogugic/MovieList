@@ -72,8 +72,23 @@ class ApiUserMovieController
 
         $status    = $data['status'] ?? 'watched';
         $rating    = isset($data['rating']) && $data['rating'] !== '' ? (int) $data['rating'] : null;
-        $comment   = $data['comment'] ?? null;
+        $comment   = isset($data['comment']) && $data['comment'] !== '' ? trim($data['comment']) : null;
         $watchedAt = isset($data['watched_at']) && $data['watched_at'] !== '' ? $data['watched_at'] : null;
+
+        if (!in_array($status, ['watched', 'want_to_watch'])) {
+            $this->json(['error' => 'Status mora biti watched ili want_to_watch.'], 400);
+            return;
+        }
+
+        if ($rating !== null && ($rating < 1 || $rating > 5)) {
+            $this->json(['error' => 'Ocjena mora biti između 1 i 5.'], 400);
+            return;
+        }
+
+        if ($comment !== null && mb_strlen($comment) > 500) {
+            $this->json(['error' => 'Komentar ne smije biti duži od 500 znakova.'], 400);
+            return;
+        }
 
         $this->userMovieModel->update($id, [
             'status'     => $status,

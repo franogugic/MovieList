@@ -7,6 +7,10 @@ require_once __DIR__ . '/../controllers/ApiUserMovieController.php';
 require_once __DIR__ . '/../controllers/ApiAuthController.php';
 require_once __DIR__ . '/../controllers/ApiAdminMovieController.php';
 
+header("Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:;");
+header("X-Content-Type-Options: nosniff");
+header("X-Frame-Options: DENY");
+
 $method = $_SERVER['REQUEST_METHOD'];
 $uri    = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 

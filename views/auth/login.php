@@ -91,7 +91,13 @@
         </div>
     </div>
 
+    <?php
+        require_once __DIR__ . '/../../helpers/Csrf.php';
+        $csrfToken = Csrf::token();
+    ?>
     <script>
+        const CSRF_TOKEN = '<?= $csrfToken ?>';
+
         function login() {
             const email    = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
@@ -99,9 +105,9 @@
 
             msg.textContent = '';
 
-            fetch('/movielist/public/index.php/api/auth/login', {
+            fetch('/movielist/public/api/auth/login', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': CSRF_TOKEN },
                 body: JSON.stringify({ email, password })
             })
             .then(r => r.json())

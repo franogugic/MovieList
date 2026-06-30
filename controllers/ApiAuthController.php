@@ -2,6 +2,7 @@
 
 require_once __DIR__ . '/../models/UserModel.php';
 require_once __DIR__ . '/../helpers/Jwt.php';
+require_once __DIR__ . '/../helpers/Csrf.php';
 
 class ApiAuthController
 {
@@ -12,8 +13,18 @@ class ApiAuthController
         $this->userModel = new UserModel();
     }
 
+    private function checkCsrf(): void
+    {
+        $token = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+        if (!Csrf::validate($token)) {
+            $this->json(['error' => 'Neispravan CSRF token.'], 403);
+            exit;
+        }
+    }
+
     public function register(): void
     {
+        $this->checkCsrf();
         $data = json_decode(file_get_contents('php://input'), true);
 
         $name     = trim($data['name'] ?? '');
@@ -48,6 +59,7 @@ class ApiAuthController
 
     public function login(): void
     {
+        $this->checkCsrf();
         $data = json_decode(file_get_contents('php://input'), true);
 
         $email    = trim($data['email'] ?? '');
