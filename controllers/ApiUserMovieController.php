@@ -31,8 +31,11 @@ class ApiUserMovieController
         $payload = AuthMiddleware::require();
         $data    = json_decode(file_get_contents('php://input'), true);
 
-        $movieId = isset($data['movie_id']) ? (int) $data['movie_id'] : 0;
-        $status  = $data['status'] ?? 'want_to_watch';
+        $movieId   = isset($data['movie_id']) ? (int) $data['movie_id'] : 0;
+        $status    = $data['status'] ?? 'want_to_watch';
+        $rating    = isset($data['rating']) && $data['rating'] !== '' ? (int) $data['rating'] : null;
+        $comment   = isset($data['comment']) && $data['comment'] !== '' ? trim($data['comment']) : null;
+        $watchedAt = isset($data['watched_at']) && $data['watched_at'] !== '' ? $data['watched_at'] : null;
 
         if ($movieId === 0) {
             $this->json(['error' => 'movie_id je obavezan.'], 400);
@@ -44,6 +47,16 @@ class ApiUserMovieController
             return;
         }
 
+        if ($rating !== null && ($rating < 1 || $rating > 5)) {
+            $this->json(['error' => 'Ocjena mora biti između 1 i 5.'], 400);
+            return;
+        }
+
+        if ($comment !== null && mb_strlen($comment) > 500) {
+            $this->json(['error' => 'Komentar ne smije biti duži od 500 znakova.'], 400);
+            return;
+        }
+
         $existing = $this->userMovieModel->findByUserAndMovie($payload['user_id'], $movieId);
         if ($existing !== null) {
             $this->json(['error' => 'Film je već na tvojoj listi.'], 400);
@@ -51,9 +64,12 @@ class ApiUserMovieController
         }
 
         $id = $this->userMovieModel->create([
-            'status'   => $status,
-            'user_id'  => $payload['user_id'],
-            'movie_id' => $movieId,
+            'status'     => $status,
+            'rating'     => $rating,
+            'comment'    => $comment,
+            'watched_at' => $watchedAt,
+            'user_id'    => $payload['user_id'],
+            'movie_id'   => $movieId,
         ]);
 
         $this->json(['message' => 'Film dodan na listu.', 'id' => $id], 201);
